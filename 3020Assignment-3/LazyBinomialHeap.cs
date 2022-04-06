@@ -84,15 +84,9 @@ namespace _3020Assignment_3
         public LazyBinomialHeap()
         {
             size = 0;
-            rootListArr = new List<BinomialNode<T>>[this.MaxDegrees()]; 
+            rootListArr = new List<BinomialNode<T>>[1]; 
+            rootListArr[0] = new List<BinomialNode<T>>();
             highest = null;
-        }
-
-        // MaxDegrees
-        // Determines the maximum size needed for rootListArr
-        private int MaxDegrees()
-        {
-            return (int)Math.Ceiling(Math.Log2(size + 1));
         }
 
         // Insert
@@ -104,7 +98,7 @@ namespace _3020Assignment_3
         {
             BinomialNode<T> insertNode = new BinomialNode<T>(item);
             
-            if (highest.Item.CompareTo(item) < 0) // Update highest if necessary
+            if ((highest == null) || (highest.Item.CompareTo(item) < 0)) // Update highest if necessary
                 highest = insertNode;
 
             rootListArr[0].Add(insertNode); // Insert new binomial node to the list containing degree 0
@@ -134,27 +128,32 @@ namespace _3020Assignment_3
                     current = next;
 
                 }
-            }
-            size--;
 
-            Coalesce();
+                size--;
 
-            // Find new highest. Assume that after Coalesce that each index in rootListArr contains a list with at most one root
+                Coalesce(); // combine trees
 
-            if (!Empty())
-            {
-                BinomialNode<T> tempHighest = rootListArr[0][0]; // initialize with the first node in the heap
+                // Find new highest. Assume that after Coalesce that each index in rootListArr contains a list with at most one root
 
-                for (int i = 1; i < rootListArr.Length; i++)
+                if (!Empty())
                 {
-                    if (tempHighest.Item.CompareTo(rootListArr[i][0].Item) < 0)
-                        tempHighest = rootListArr[i][0];
+                    
+                    BinomialNode<T> tempHighest = null;
+
+                    for (int i = 0; i < rootListArr.Length; i++)
+                    {
+                        if ((rootListArr[i].Count > 0) &&
+                            ((tempHighest == null) || (tempHighest.Item.CompareTo(rootListArr[i][0].Item) < 0)))
+                            tempHighest = rootListArr[i][0];
+                    }
+                    highest = tempHighest;
                 }
-                highest = tempHighest;
-            }
-            else
-                highest = null;
-        }
+                else
+                    highest = null;
+
+            } // end if
+
+        }// end Remove
 
         // Front
         // Returns the item with the highest priority
@@ -176,7 +175,137 @@ namespace _3020Assignment_3
         // Time complexity:  O(log n)
         public void Coalesce()
         {
+            // First we might need to resize the rootListArr
+            Resize();
 
+            foreach (List<BinomialNode<T>> rootList in rootListArr)
+            {
+                BinomialNode<T> temp1 = null;
+                BinomialNode<T> temp2 = null;
+
+                while (rootList.Count > 1)
+                {
+                    temp1 = rootList[rootList.Count - 1]; // last tree in the list
+                    temp2 = rootList[rootList.Count - 2]; // second-last tree
+
+                    rootList.RemoveAt(rootList.Count - 1); // remove the last 2 trees from the root list as they will be combined
+                    rootList.RemoveAt(rootList.Count - 1);
+
+                    if (temp1.Item.CompareTo(temp2.Item) > 0) // temp1 has higher priority
+                    {
+                        BinomialLink(temp2, temp1);           // temp1 will be the root
+                        rootListArr[temp1.Degree].Add(temp1); // add temp1 to the root list 1 degree higher
+                    }
+                    else                                      // temp2 has higher priority
+                    {
+                        BinomialLink(temp1, temp2);           // temp2 will be the root
+                        rootListArr[temp2.Degree].Add(temp2); // add temp2 to the root list 1 degree higher
+                    }
+                        
+                } // end while
+            }
+        }// end Coalesce
+
+        // Print
+        // Outputs the lazy binomial heap structure to the console
+
+        public void Print()
+        {
+            Console.WriteLine(this.ToString());
+        }
+
+        // ToString
+        // returns a string representing the lazy binomial heap structure
+        public override string ToString()
+        {
+            string BHstring = "";
+
+            if (!Empty())
+            {
+                BHstring += "##################################################\n";
+                int degree = 0;
+                foreach (List<BinomialNode<T>> rootList in rootListArr)
+                {
+                    BHstring += $"degree: {degree}\n\n";
+
+                    foreach (BinomialNode<T> node in rootList)
+                    {
+                        Queue<BinomialNode<T>> nextNodes = new Queue<BinomialNode<T>>(); // represent the next level of the tree
+                        Queue<BinomialNode<T>> currNodes = new Queue<BinomialNode<T>>(); // current level of tree
+                        BinomialNode<T> current = node;
+                        nextNodes.Enqueue(current);
+
+                        while (nextNodes.Count > 0) // loop as long as there are more node to add to string
+                        {
+                            while (nextNodes.Count > 0) // transfer all to currNodes
+                            {
+                                currNodes.Enqueue(nextNodes.Dequeue());
+                            }
+
+                            while (currNodes.Count > 0)
+                            {
+                                current = currNodes.Dequeue();
+
+                                while (current != null)
+                                {
+                                    BHstring += $" {{{current.Item.ToString()}}} ";
+
+                                    if (current.LeftMostChild != null) // add all Left Children to the next nodes queue
+                                        nextNodes.Enqueue(current.LeftMostChild);
+
+                                    current = current.RightSibling;
+                                }
+                            }
+
+                            BHstring += "\n";  // all nodes of the current level have been added to string
+                        }
+
+                        BHstring += "\n";
+
+                    }// end foreach (2)
+
+                    if(degree != rootListArr.Length - 1)
+                        BHstring += "==============================\n";
+                    degree++;
+
+                }//end foreach (1)
+
+                BHstring += "##################################################\n";
+
+            }// end if
+
+            return BHstring;
+        }// end ToString
+
+
+
+        // Resize
+        // Creates a new array with adjusted size for rootListArr
+        private void Resize()
+        {
+            if (MaxDegrees() > rootListArr.Length) // only resize if it is making the rootListArr bigger
+            {
+                List<BinomialNode<T>>[] newRootListArr = new List<BinomialNode<T>>[MaxDegrees()];
+
+                for(int i = 0; i < MaxDegrees(); i++)
+                {
+                    newRootListArr[i] = new List<BinomialNode<T>>();
+                }
+
+                for(int i = 0; i < rootListArr.Length; i++) // move everything into the new array
+                {
+                    newRootListArr[i] = rootListArr[i];
+                }
+
+                rootListArr = newRootListArr;
+            }
+        }
+
+        // MaxDegrees
+        // Determines the maximum size needed for rootListArr
+        public int MaxDegrees()
+        {
+            return (int)Math.Ceiling(Math.Log2(size + 1));
         }
 
         // BinomialLink

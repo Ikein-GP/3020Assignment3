@@ -12,6 +12,12 @@ namespace _3020Assignment_3
     {
         static void Main()
         {
+            //================================================================================
+            //
+            //                      Tests For TernaryTrie
+            //
+            //================================================================================
+
             Trie<int> T = new Trie<int>();
 
             T.Insert("bag", 10);
@@ -74,7 +80,49 @@ namespace _3020Assignment_3
 
             T.PrintTree();
 
-            Console.ReadKey();
-        }
+            //Console.ReadKey();
+
+            //================================================================================
+            //
+            //                      Tests For LazyBinomialHeap
+            //
+            //================================================================================
+
+            int i;
+            Random r = new Random();
+
+            LazyBinomialHeap<int> LBH = new LazyBinomialHeap<int>();
+
+            for (i = 0; i < 15; i++)
+            {
+                LBH.Insert(r.Next(50));
+            }
+
+            Console.WriteLine($"Printing Binomial Heap of Size: {LBH.Size()}");
+            LBH.Print();
+
+            Console.WriteLine($"Front: {LBH.Front()}");
+            LBH.Remove();
+
+            Console.WriteLine($"Printing Binomial Heap of Size: {LBH.Size()}");
+            LBH.Print();
+
+            //
+
+            for (i = 0; i < 18; i++)
+            {
+                LBH.Insert(r.Next(50));
+            }
+
+            Console.WriteLine($"Printing Binomial Heap of Size: {LBH.Size()}");
+            LBH.Print();
+
+            Console.WriteLine($"Front: {LBH.Front()}");
+            LBH.Remove();
+
+            Console.WriteLine($"Printing Binomial Heap of Size: {LBH.Size()}");
+            LBH.Print();
+
+        } // end Main
     }
 }
