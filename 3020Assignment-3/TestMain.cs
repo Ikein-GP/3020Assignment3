@@ -109,7 +109,7 @@ namespace _3020Assignment_3
 
             //
 
-            for (i = 0; i < 18; i++)
+            for (i = 0; i < 19; i++)
             {
                 LBH.Insert(r.Next(50));
             }

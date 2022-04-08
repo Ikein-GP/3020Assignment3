@@ -326,8 +326,10 @@ namespace _3020Assignment_3
 
         public void MakeEmpty()
         {
+            // Essentially make a new LazyBinomialHeap
             size = 0;
-            rootListArr = new List<BinomialNode<T>>[this.MaxDegrees()];
+            rootListArr = new List<BinomialNode<T>>[1];
+            rootListArr[0] = new List<BinomialNode<T>>();
             highest = null;
         }
 
